@@ -1,0 +1,8 @@
+{ "filter": [{
+    "status":"Active"
+    },
+    {
+    "status":"Not Active"
+}
+]
+}
