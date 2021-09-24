@@ -1,4 +1,4 @@
-const loginUrl = "http://127.0.0.1:8000/user/login";
+const loginUrl = "http://127.0.0.1:8001/api/login";
 const registerUrl = "http://127.0.0.1:8001/api/register";
 const getTableUrl = "http://localhost:8000/v2/amfApi/{cAppId}/send/apps/";
 const getAppIntUrl = "http://localhost:8000/v2/amfApi/{cAppId}/send/apps/";

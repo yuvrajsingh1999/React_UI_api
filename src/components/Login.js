@@ -97,7 +97,7 @@ export default function Login() {
           onChange={e => setUsername(e.target.value)}
           required />
       </label>
-
+      <input type="hidden" name="_token" id="token" value="{{ csrf_token() }}" />
       <label>
         Password:
         <input
