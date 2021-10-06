@@ -9,53 +9,45 @@ import { useHistory, Redirect } from "react-router-dom";
 import ReactPaginate from 'react-paginate';
 import {FcRefresh} from 'react-icons/fc';
 import {MdOpenInNew} from 'react-icons/md';
+import { useSelector, useDispatch } from 'react-redux';
 
 export default function FirstTable() {
-
-  console.log("abc");  
+  // console.log(store.getState());
+  const appId = useSelector((state) => state.appId);
+  const intId = useSelector((state) => state.intId);
+  const data = useSelector((state) => state.integrationData);
+  const Total = useSelector((state) => state.totalInt);
+  const CurrentPage = useSelector((state) => state.currentPageInt);
+  
+  const dispatch = useDispatch();
   let history = useHistory();
- 
-  const [data, setData] = useState([]);
-  const [Total, setTotal] = useState(1);
-  const [IntgId, setIntgId] = useState();
-  const [CurrentPage, setCurrentPage] = useState(1);
-    // let user = JSON.parse(localStorage.getItem('user-info'));
-   
-    let userToken = localStorage.getItem('token');
-    var AppId = localStorage.getItem('AppId');
 
+  
     
     const getTableData = () => {
-      console.log("axios called");
-        var url = getAppIntUrl+AppId+"/integrations";
+      var url = getAppIntUrl+appId+"/integrations";
       axios.get(url,{params : {'current_page':CurrentPage}}).then((response) => {
       console.log(response.data);  
-      // window.location.reload();
-   
-      setData(response.data.integrations);
-      setTotal(response.data.last_page);
+      dispatch({type:'INTEGRATION_DATA', value:response.data.integrations});
+      dispatch({type:'TOTAL_INT', value:response.data.last_page});
       });
     }
-  useEffect(() => { console.log("Total page data changed data changed");}, [Total]);
-  useEffect(() => { 
-                    console.log("Integration id is "+IntgId); 
-                    if(!IntgId){}else( nextPage()) }, [IntgId]);
-  
-function nextPage(){
-  localStorage.setItem('IntId',IntgId);
-  // <Redirect to="/secondtable"/>
+
+
+function handleApp(id) {
+  console.log(id);
+  dispatch({type:'INT', value:id});
   history.push('/dashboard/appid/integrationid');
 }
+
 function handlePageClick({ selected: selectedPage }){
   console.log(selectedPage+1);
-  setCurrentPage(selectedPage+1);
-
-  // getData();
-  // handleFilterChange();
+  dispatch({type:'CURRENT_PAGE_INT', value:selectedPage+1});
+  
 }
-useEffect(() => { console.log("is calling");getTableData();}, []);
-useEffect(() => { console.log("Current page data changed data changed");getTableData(); }, [CurrentPage]);
-
+useEffect(() => { getTableData();}, []);
+useEffect(() => getTableData(), [CurrentPage]);
+  
     
     return (
         <div>
@@ -78,7 +70,7 @@ useEffect(() => { console.log("Current page data changed data changed");getTable
           <ReactTooltip id="refresh" style={{'borderRadius':'11px'}}>
         <span>Refresh</span>
       </ReactTooltip>
-      <h3 style={{'float':'left','marginLeft':'10%','color':'black'}}>Application Id ({AppId})</h3>
+      <h3 style={{'float':'left','marginLeft':'10%','color':'black'}}>Application Id ({appId})</h3>
         <Table className="css-serial dashboard-table" striped="true" bordered="true" hover="true" responsive="sm"  variant="dark">
   <thead  >
     <tr>
@@ -98,7 +90,7 @@ useEffect(() => { console.log("Current page data changed data changed");getTable
       <td>{col._id}</td>
       <td>{col.type}</td>
       <td>{col.businessName}</td>
-      <td><Button className="button-table-view" data-tip data-for="view"   onClick={() => {setIntgId(col._id)}}><MdOpenInNew size={17}/></Button>
+      <td><Button className="button-table-view" data-tip data-for="view"   onClick={() => handleApp(col._id)}><MdOpenInNew size={17}/></Button>
       <ReactTooltip id="view" style={{'borderRadius':'11px'}}>
         <span>View Detail</span>
       </ReactTooltip> </td>

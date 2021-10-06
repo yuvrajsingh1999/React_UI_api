@@ -1,4 +1,4 @@
-import React,{useState} from "react";
+import React from "react";
 import axios from 'axios';
 import { useHistory } from "react-router-dom";
 import { Redirect } from 'react-router-dom';
@@ -8,14 +8,19 @@ import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import {FaRegWindowClose} from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux';
 
 export default function Login() {
+
+  const username = useSelector((state) => state.userName);
+  const ErrorMsg = useSelector((state) => state.errorMsg);
+  const password = useSelector((state) => state.password);
+  const show = useSelector((state) => state.showError);
+
+  const dispatch = useDispatch();
     let history = useHistory();
-    const [username, setUsername] = useState("");
-    const [ErrorMsg, setErrorMsg] = useState();
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
-  var refresh = window.localStorage.getItem('page');
+  
+    var refresh = window.localStorage.getItem('page');
   console.log(refresh);
   if (refresh==='logout'){
       window.location.reload();
@@ -43,13 +48,16 @@ export default function Login() {
             window.localStorage.setItem("token", response.data.token);
             window.localStorage.setItem("user-info", userinfo);
             window.localStorage.setItem("page", "home");
-            
+            dispatch({type:'USERNAME', value:`${username}`});
+            // dispatch({type:'PASSWORD', value:`${password}`});
+          //  console.log(username);
             history.push("/dashboard");
         }
         else{
-
-          setErrorMsg(response.data.message);
-          setShow(true);
+          dispatch({type:'ERROR_MSG', value:response.data.message});
+          // setErrorMsg(response.data.message);
+          dispatch({type:'SHOW_ERROR', value:true});
+          // setShow(true);
           <Redirect to="/signin" />
         }
         }).catch(err => {
@@ -68,7 +76,7 @@ export default function Login() {
               color="inherit"
               size="small"
               onClick={() => {
-                setShow(false);
+                dispatch({type:'SHOW_ERROR', value:false});
               }}
             >
 
@@ -79,7 +87,7 @@ export default function Login() {
           <div className="alert-msg">
           {ErrorMsg}
 
-          <button onClick={() => setShow(false)} style={{backgroundColor:'transparent','padding':'0px','color':'black'}}>
+          <button onClick={() => dispatch({type:'SHOW_ERROR', value:false})} style={{backgroundColor:'transparent','padding':'0px','color':'black'}}>
           <FaRegWindowClose />
           </button>  
           </div>
@@ -94,7 +102,7 @@ export default function Login() {
           name="username"
           type="username"
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => dispatch({type:'USERNAME', value:e.target.value})}
           required />
       </label>
       <input type="hidden" name="_token" id="token" value="{{ csrf_token() }}" />
@@ -104,7 +112,7 @@ export default function Login() {
           name="password"
           type="password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={e => dispatch({type:'PASSWORD', value:e.target.value})}
           required />
       </label>
 

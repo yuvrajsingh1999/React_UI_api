@@ -392,9 +392,9 @@ width:30%;
 font-size: initial;
 display: inline;
 }
-.alert-msg {
+/* .alert-msg {
   width:250%;
-}
+} */
 .alert-msg button {
   float: right;
 }

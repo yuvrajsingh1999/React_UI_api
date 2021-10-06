@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from "react";
 import { Link } from "react-router-dom";
 import withBreadcrumbs from "react-router-breadcrumbs-hoc";
+import { useSelector, useDispatch } from 'react-redux';
 
  function Breadcrumbs({ breadcrumbs }) {
-
-var AppId=(localStorage.getItem('AppId') ? localStorage.getItem('AppId') : "");
-var IntId=(localStorage.getItem('IntId') ? localStorage.getItem('IntId') : "");
-var FlowId=(localStorage.getItem('FlowId') ? localStorage.getItem('FlowId') : "");
+  
+  const AppId = useSelector((state) => state.appId);
+  const IntId = useSelector((state) => state.intId);
+  const FlowId = useSelector((state) => state.flowId);
   return (
     <div className="breadcrumb-div" style={{'textAlign':'left'}}>
       <div className="breadcrumbs" style={{'justifyContent':'-webkit-box','color':'white'}}>

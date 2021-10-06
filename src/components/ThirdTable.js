@@ -14,6 +14,7 @@ import ReactTooltip from "react-tooltip";
 import { Divider } from "@material-ui/core";
 import {FcRefresh} from 'react-icons/fc';
 import { Dropdown } from 'semantic-ui-react';
+import { useSelector, useDispatch } from 'react-redux';
 
 
 const Container = styled.div`
@@ -37,29 +38,24 @@ const LightTooltip = withStyles(theme => ({
 
 export default function ThirdTable() {
   
-  let history = useHistory();
-
-  const [isCopied, setIsCopied] = useState(false);
-    const warning = yellow[600];
-  var AppId = localStorage.getItem('AppId');
-  var IntId = localStorage.getItem('IntId');
-  var FlowId = localStorage.getItem('FlowId');
-  const [data, setData] = useState([]);
-  const [Total, setTotal] = useState(1);
-  const [CurrentPage, setCurrentPage] = useState(1);
-  const [RequestFilter, setRequestFilter] = useState("");
-  const [Selected, setSelected] = useState("");
-  const [TypeFilter, setTypeFilter] = useState("");
-  const [values, setvalues] = useState([""]);
+  const appId = useSelector((state) => state.appId);
+  const intId = useSelector((state) => state.intId);
+  const flowId = useSelector((state) => state.flowId);
+  const data = useSelector((state) => state.flowRequestData);
+  const Total = useSelector((state) => state.totalPayload);
+  const CurrentPage = useSelector((state) => state.currentPagePayload);
+  const values = useSelector((state) => state.valueFilter);
+  const isCopied = useSelector((state) => state.copied);
   
-    // let user = JSON.parse(localStorage.getItem('user-info'));
-   
-    let userToken = localStorage.getItem('token');
+  let history = useHistory();
+  const dispatch = useDispatch();
+  const warning = yellow[600];
+  
     
     const onCopyText = () => {
-      setIsCopied(true);
+      dispatch({type:'COPIED', value:true});
       setTimeout(() => {
-        setIsCopied(false);
+        dispatch({type:'COPIED', value:false});
       }, 1000);
     };
     const options = [
@@ -68,49 +64,30 @@ export default function ThirdTable() {
       { key:'incomming', text: 'Incomming', value: 'incomming' },
       { key:'login', text: 'Login', value: 'login' },
     ]
-    // const options = [
-    //   {  value: '', label:'None' },
-    //   {  value: 'outgoing', label:'Outgoing' },
-    //   {  value: 'incomming', label:'Incomming' },
-    //   {  value: 'login', label:'Login' },
-    // ]
+    
     const getTableData = () => {
       var filterVal;
-      // filterVal = JSON.stringify(values)
       values.map((item) => {filterVal=item})
-      var getData = getFlowUrl+FlowId+"?current_page="+CurrentPage;
+      var getData = getFlowUrl+flowId+"?current_page="+CurrentPage;
       axios.get(getData,{params: { 'filter' :filterVal}}).then((response) => {
       console.log(response.data);  
-      // window.location.reload();
-   
-      setData(response.data.data);
-      setTotal(response.data.last_page);
+      dispatch({type:'FLOW_REQUEST_DATA', value:response.data.data});
+      dispatch({type:'TOTAL_PAYLOAD', value:response.data.last_page});
       });
     }
-  useEffect(() => { console.log("Total page data changed data changed");}, [Total]);
-  useEffect(() => { console.log("AppId is"+AppId);
-                    console.log("Integration id is "+IntId);
-                    console.log("Flow id is "+FlowId); 
-                    if(!FlowId){}else( nextPage()) }, [FlowId]);
   
-function nextPage(){
-  localStorage.setItem('FlowId',FlowId);
-//   history.push('/Thirdtable');
-}
 function handlePageClick({ selected: selectedPage }){
-    // console.log(selectedPage+1);
-    setCurrentPage(selectedPage+1);
- 
-    // getData();
-    // handleFilterChange();
-  }
+  dispatch({type:'CURRENT_PAGE_PAYLOAD', value:selectedPage+1});
+ }
+
   function truncate(string) {
    var str = string.substring(0,20)+"...";
    return str;
   }
+
   useEffect(() => getTableData(), []);
-  useEffect(() => { console.log("Current page data changed data changed");getTableData(); }, [CurrentPage]);
-  useEffect(() => { console.log("Multiple Filter data changed: " + Selected); }, [Selected]);
+  useEffect(() => getTableData(), [CurrentPage]);
+  
   useEffect(() => { console.log(values); }, [values]);
   function copyCodeToClipboard() {
     const el = this.textArea
@@ -119,9 +96,8 @@ function handlePageClick({ selected: selectedPage }){
     this.setState({copySuccess: true})
   }
     const handleSelect = (e, {value}) => {
-       setvalues(oldArray => [value]);
-      // e.map((item) => {setSelected(oldArray => [...oldArray, item.value])})
-    
+      dispatch({type:'VALUE_FILTER_DATA', value:[value]});
+
     }
     return (
         <div>
@@ -145,7 +121,7 @@ function handlePageClick({ selected: selectedPage }){
           <ReactTooltip id="refresh" >
         <span>Refresh</span>
       </ReactTooltip>
-      <h3 style={{'float':'left','marginLeft':'13%'}}>Flow Request ({FlowId})</h3>
+      <h3 style={{'float':'left','marginLeft':'13%'}}>Flow Request ({flowId})</h3>
 
         <table className="css-serial dashboard-table final-table" striped="true" bordered="true" hover="true" responsive="sm" style={{'color':'white','border': '1px solid white',
   'borderCollapse': 'collapse','overflowX':'auto'

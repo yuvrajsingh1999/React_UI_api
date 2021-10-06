@@ -13,12 +13,12 @@ import ReactDOM from 'react-dom'
 
 
 var AppId = (localStorage.getItem('AppId') ? localStorage.getItem('AppId') : "");
-
+console.log("build se print");
 function App() {
   
   return (
     <div className="App">
-      <Router>
+      <Router basename="/react/build">
     <Navbar />
   
     <Switch>

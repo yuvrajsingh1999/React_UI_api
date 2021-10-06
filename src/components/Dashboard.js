@@ -9,54 +9,47 @@ import { useHistory, Redirect  } from "react-router-dom";
 import ReactPaginate from 'react-paginate';
 import {FcRefresh} from 'react-icons/fc';
 import {MdOpenInNew} from 'react-icons/md';
+import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 
-export default function Dashboard() {
+function Dashboard() {
+  const appId = useSelector((state) => state.appId);
+  const data = useSelector((state) => state.appData);
+  const Total = useSelector((state) => state.totalApp);
+  const CurrentPage = useSelector((state) => state.currentPageApp);
   
+  const dispatch = useDispatch();
   let history = useHistory();
   var refresh = window.localStorage.getItem('page');
   if (refresh==='home'){
       window.location.reload();
       window.localStorage.removeItem('page');
   } 
-  const [data, setData] = useState([]);
-  const [Total, setTotal] = useState(1);
-  const [AppId, setAppId] = useState();
-  // const [IntgId, setIntgId] = useState();
-  const [CurrentPage, setCurrentPage] = useState(1);
-    // let user = Object.values(localStorage.getItem('user-info'));
-   
-    // let userToken = localStorage.getItem('token');
     
     const getTableData = () => {
       var getUrl = getTableUrl;
       axios.get(getTableUrl,{params : {'current_page':CurrentPage}}).then((response) => {
       console.log(response.data);  
-      // window.location.reload();
-   
-      setData(response.data.integrations);
-      setTotal(response.data.last_page);
+        dispatch({type:'APP_DATA', value:response.data.integrations});
+        dispatch({type:'TOTAL_APP', value:response.data.last_page});
+      
       });
     }
-  useEffect(() => { console.log("Total page data changed data changed");}, [Total]);
-  useEffect(() => { console.log("AppId is"+AppId);
-                    if(!AppId){}else( nextPage()) }, [AppId]);
-  
-function nextPage(){
-  localStorage.setItem('AppId',AppId);
-  history.push('/dashboard/appid');
-}
-function handlePageClick({ selected: selectedPage }){
-  // console.log(selectedPage+1);
-  setCurrentPage(selectedPage+1);
 
-  // getData();
-  // handleFilterChange();
+function handlePageClick({ selected: selectedPage }){
+  dispatch({type:'CURRENT_PAGE_APP', value:selectedPage+1});
+}
+
+function handleApp(id) {
+  console.log(id);
+  dispatch({type:'APP', value:id});
+  history.push('/dashboard/appid');
 }
 
 useEffect(() => getTableData(), []);
-useEffect(() => { console.log("Current page data changed data changed");getTableData(); }, [CurrentPage]);
-
+useEffect(() => getTableData(), [CurrentPage]);
+  
     
     return (
           <div>
@@ -88,11 +81,11 @@ useEffect(() => { console.log("Current page data changed data changed");getTable
   <tbody >
     {data.map((col) => (
       
-      <tr key={col}>
+      <tr key={col.CHANNEL_APP_ID}>
 
       <td></td>
       <td>{col.CHANNEL_APP_ID}</td>
-      <td><Button className="button-table-view" data-tip data-for="view"   onClick={() => {setAppId(col.CHANNEL_APP_ID)}}><MdOpenInNew size={17}/></Button> 
+      <td><Button className="button-table-view" data-tip data-for="view"   onClick={() => handleApp(col.CHANNEL_APP_ID)} ><MdOpenInNew size={17}/></Button> 
       <ReactTooltip id="view" style={{'borderRadius':'11px'}}>
         <span>View Detail</span>
       </ReactTooltip></td>
@@ -122,3 +115,12 @@ useEffect(() => { console.log("Current page data changed data changed");getTable
       </div>
     )
 }
+
+// const mapState = (state, props) => {
+  
+//   console.log(state.appId);
+//   return {
+//     appId: state.appId
+//   }
+// }
+export default Dashboard

@@ -10,23 +10,25 @@ import ReactTooltip from "react-tooltip";
 import {FcRefresh} from 'react-icons/fc';
 import {MdOpenInNew} from 'react-icons/md';
 import { Dropdown } from 'semantic-ui-react';
+import { useSelector, useDispatch } from 'react-redux';
 
 export default function SecondTable() {
   
-  let history = useHistory();
-   
-  var AppId = localStorage.getItem('AppId');
-  var IntId = localStorage.getItem('IntId');
-  const [data, setData] = useState([]);
-  const [Total, setTotal] = useState(1);
-  const [FlowId, setFlowId] = useState();
-  const [Dirvalues, setDirvalues] = useState([""]);
-  const [Typvalues, setTypvalues] = useState([""]);
-  const [CurrentPage, setCurrentPage] = useState(1);
-    // let user = JSON.parse(localStorage.getItem('user-info'));
-   
-    let userToken = localStorage.getItem('token');
-    const typeopt = [
+  const appId = useSelector((state) => state.appId);
+  const intId = useSelector((state) => state.intId);
+  const flowId = useSelector((state) => state.flowId);
+  const data = useSelector((state) => state.flowData);
+  const Dirvalues = useSelector((state) => state.directionFilter);
+  const Typvalues = useSelector((state) => state.typeFilter);
+  const Total = useSelector((state) => state.totalFlow);
+  const CurrentPage = useSelector((state) => state.currentPageFlow);
+  
+  console.log("current pagein site: "+CurrentPage);
+  
+  let history = useHistory();  
+  const dispatch = useDispatch();
+  
+  const typeopt = [
       { key:'', text: 'None', value: '' },
       { key:'ok', text: 'Ok', value: 'ok' },
       { key:'inprogress', text: 'Inprogress', value: 'inprogress' },
@@ -44,47 +46,38 @@ export default function SecondTable() {
       Dirvalues.map((item) => {dirFilter=item})
       Typvalues.map((items) => {typFilter=items})
 
-    var getData = getIntegrationUrl+AppId+"/"+IntId+"?current_page="+CurrentPage;
+    var getData = getIntegrationUrl+appId+"/"+intId+"?current_page="+CurrentPage;
       axios.get(getData,{params: { 'dirFilter' :dirFilter,'typFilter':typFilter}}).then((response) => {
       console.log(response.data);  
-      // window.location.reload();
-   
-      setData(response.data.data);
-      setTotal(response.data.last_page);
+        
+      dispatch({type:'FLOW_DATA', value:response.data.data});
+      dispatch({type:'TOTAL_FLOW', value:response.data.last_page});
       });
     }
-  useEffect(() => { console.log("Total page data changed data changed");}, [Total]);
-  useEffect(() => { console.log("AppId is"+AppId);
-                    console.log("Integration id is "+IntId);
-                    console.log("Flow id is "+FlowId); 
-                    if(!FlowId){}else( nextPage()) }, [FlowId]);
   
-function nextPage(){
-  localStorage.setItem('FlowId',FlowId);
-  history.push('/dashboard/appid/integrationid/flowid');
-}
 function handlePageClick({ selected: selectedPage }){
     console.log(selectedPage+1);
-    setCurrentPage(selectedPage+1);
- 
-    // getData();
-    // handleFilterChange();
+    dispatch({type:'CURRENT_PAGE_FLOW', value:selectedPage+1});
+    // console.log("send page new "+CurrentPage);
+    // getTableData();
   }
+  function handleApp(id) {
+    console.log(id);
+    dispatch({type:'FLOW', value:id});
+    history.push('/dashboard/appid/integrationid/flowid');
+}
+  
 
   useEffect(() => getTableData(), []);
-  useEffect(() => { console.log("Current page data changed data changed");getTableData(); }, [CurrentPage]);
-  useEffect(() => { console.log("Direction Filter data changed: " + Dirvalues); }, [Dirvalues]);
-  useEffect(() => { console.log("Direction Filter data changed: " + Typvalues); }, [Typvalues]);
-
+  useEffect(() => getTableData(), [CurrentPage]);
+  
   const handleDirSelect = (e, {value}) => {
-    setDirvalues(oldArray => [value]);
-   // e.map((item) => {setSelected(oldArray => [...oldArray, item.value])})
- 
+    dispatch({type:'DIRECTION_FILTER_DATA', value:[value]});
+  
  }
  const handleTypSelect = (e, {value}) => {
-  setTypvalues(oldArray => [value]);
- // e.map((item) => {setSelected(oldArray => [...oldArray, item.value])})
-
+  dispatch({type:'TYPE_FILTER_DATA', value:[value]});
+  
 }
 
     return (
@@ -111,7 +104,7 @@ function handlePageClick({ selected: selectedPage }){
           <ReactTooltip id="refresh" style={{'borderRadius':'11px'}}>
         <span>Refresh</span>
       </ReactTooltip>
-      <h3 style={{'float':'left','marginLeft':'10%','fontSize':'1.8rem'}}>Integration id ({IntId})</h3>
+      <h3 style={{'float':'left','marginLeft':'10%','fontSize':'1.8rem'}}>Integration id ({intId})</h3>
         <Table className="css-serial dashboard-table" striped="true" bordered="true" hover="true" responsive="sm" style={{'color':'white','width':'100%','border': '1px solid white',
   'borderCollapse': 'collapse'
   
@@ -126,14 +119,14 @@ function handlePageClick({ selected: selectedPage }){
   </thead>
   <tbody >{(data=="") ? (<React.Fragment><tr style={{'color':'black'}}> No data available</tr></React.Fragment>) : (<React.Fragment>{data.map((col) => (
       
-      <tr key={col.time} style={{'backgroundColor': (col.type=='ok') ? '#c6ffb3': (col.type=='inprogress') ? '#d9d9d9' : '#ffb3b3'}}>
+      <tr key={col.flow_id} style={{'backgroundColor': (col.type=='ok') ? '#c6ffb3': (col.type=='inprogress') ? '#d9d9d9' : '#ffb3b3'}}>
         
       <td></td>
       <td >{(col.direction=='2') ? (<React.Fragment><strong> Ameyo</strong> </React.Fragment>) :((col.direction=='1') ? (<React.Fragment><strong> Channel</strong> </React.Fragment>) :((col.direction=='0') ? (<React.Fragment><strong> Direct</strong> </React.Fragment>) :(<React.Fragment> </React.Fragment>)))}</td>
       {/* <td>{(col.type=='ok') ? (<React.Fragment><Button variant="contained" style={{'background-color':'#66ff33'}}>{col.type} </Button></React.Fragment>) :((col.type=='inprogress') ? (<React.Fragment><Button variant="contained" style={{'background-color':'#cccccc'}}>{col.type} </Button></React.Fragment>) :((col.type=='failure') ? (<React.Fragment><Button variant="contained" style={{'background-color':'#ff0000'}}>{col.type} </Button></React.Fragment>) :(<React.Fragment></React.Fragment>)))}</td> */}
       <td>{col.flow_id}</td>
       <td>{col.time}</td>
-      <td><Button className="button-table-view" data-tip data-for="view" style={{'boxShadow':'none','backgroundColor':'transparent'}} variant="contained" onClick={() => {setFlowId(col.flow_id)}} ><MdOpenInNew size={17}/></Button>
+      <td><Button className="button-table-view" data-tip data-for="view" style={{'boxShadow':'none','backgroundColor':'transparent'}} variant="contained" onClick={() => handleApp(col.flow_id)} ><MdOpenInNew size={17}/></Button>
       <ReactTooltip id="view" style={{'borderRadius':'11px'}}>
         <span>View Detail</span>
       </ReactTooltip> </td>
